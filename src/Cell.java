@@ -14,7 +14,7 @@ public class Cell {
     public double cost;
 
     //czy pole jest blokiem
-    public boolean isBlock;
+    public boolean isBlock = false;
 
     //jeśli prawda to jest to rozwiązanie
     public boolean isSolution;

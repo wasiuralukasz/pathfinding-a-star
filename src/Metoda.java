@@ -8,7 +8,7 @@ public class Metoda {
     public static final double DIAG_COST = Math.sqrt(2);
 
     //koszt w momencie gdy znajduje się tam przeszkoda
-    public static final int KOSZT_PRZESZKODA = 3;
+    public static final int BLOCK_COST = 3;
 
     public Cell[][] grid, grid1;
 
@@ -23,7 +23,10 @@ public class Metoda {
     //Koniec
     public int endI, endJ;
 
-    public Metoda(int width, int height, int sI, int sJ, int kI, int kJ) {
+    int moveCount = 0;
+    int moveCount1 = 1;
+
+    public Metoda(int width, int height, int sI, int sJ, int eI, int eJ) {
         grid = new Cell[width][height];
         grid1 = new Cell[width][height];
 
@@ -38,11 +41,21 @@ public class Metoda {
         });
 
         startCell(sI, sJ);
-        endCell(kI, kJ);
+        endCell(eI, eJ);
 
         //liczenie heurysytyki dla wszystkich pól
-        for(int i = 0; i < grid.length; i++) {
-            for(int j = 0; j < grid.length; j ++) {
+        addHeuristic();
+
+        grid[startI][startJ].cost = 0;
+        grid1[startI][startJ].cost = 0;
+
+        //umieszczamy bloki w gridzie
+        addRandomBlock();
+    }
+
+    public void addHeuristic() {
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid[i].length; j++) {
 
                 int dx = Math.abs(i - endI);
                 int dy = Math.abs(j - endJ);
@@ -54,29 +67,22 @@ public class Metoda {
                 grid1[i][j].isSolution = false;
             }
         }
-
-        grid[startI][startJ].cost = 0;
-        grid1[startI][startJ].cost = 0;
-
-        //umieszczamy bloki w gridzie
-        addRandomBlock(50);
     }
 
-    public void addRandomBlock(int n) {
+    public void addRandomBlock() {
         int min = 0;
-        int max = grid.length-1;
+        int maxI = grid.length-1;
+        int maxJ = grid[0].length-1;
 
-        if (n > Math.pow(grid.length, 2)) {
-            System.out.println("PODANO ZA DUZA LICZBE BLOKOW");
-        } else {
-            for (int i = 0; i < n; i++) {
-                int x = (int) Math.floor(Math.random() * (max - min + 1) + min);
-                int y = (int) Math.floor(Math.random() * (max - min + 1) + min);
-                if ((x != startI && y != startJ) || (x != endI && y != endJ)) {
-                    grid[x][y].isBlock = true;
-                    grid1[x][y].isBlock = true;
+        int n = (int)(grid.length * grid[0].length - 0.5);
+
+        for (int a = 0; a < n; a++) {
+                int i = (int) Math.floor(Math.random() * (maxI - min + 1) + min);
+                int j = (int) Math.floor(Math.random() * (maxJ - min + 1) + min);
+                if (!((i == startI && j == startJ) || (i == endI && j == endJ))) {
+                    grid[i][j].isBlock = true;
+                    grid1[i][j].isBlock = true;
                 }
-            }
         }
     }
 
@@ -114,7 +120,6 @@ public class Metoda {
 
         open.add(grid[startI][startJ]);
 
-
         while (true) {
 
             current = open.poll();
@@ -135,14 +140,14 @@ public class Metoda {
 
                 t = grid[current.i - 1][current.j];
                 if(t.isBlock)
-                    updateCost(current, t, current.cost + (VER_HOR_COST*5), closed, open);
+                    updateCost(current, t, current.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
                 else
                     updateCost(current, t, current.cost + VER_HOR_COST, closed, open);
 
                 if (current.j - 1 >= 0) {
                     t = grid[current.i - 1][current.j - 1];
                     if(t.isBlock)
-                        updateCost(current, t, current.cost + (DIAG_COST*5), closed, open);
+                        updateCost(current, t, current.cost + (DIAG_COST*BLOCK_COST), closed, open);
                     else
                         updateCost(current, t, current.cost + DIAG_COST, closed, open);
                 }
@@ -150,7 +155,7 @@ public class Metoda {
                 if (current.j + 1 < grid[0].length) {
                     t = grid[current.i - 1][current.j + 1];
                     if(t.isBlock)
-                        updateCost(current, t, current.cost + (DIAG_COST*5), closed, open);
+                        updateCost(current, t, current.cost + (DIAG_COST*BLOCK_COST), closed, open);
                     else
                         updateCost(current, t, current.cost + DIAG_COST, closed, open);
                 }
@@ -159,7 +164,7 @@ public class Metoda {
             if (current.j - 1 >= 0) {
                 t = grid[current.i][current.j - 1];
                 if(t.isBlock)
-                    updateCost(current, t, current.cost + (VER_HOR_COST*5), closed, open);
+                    updateCost(current, t, current.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
                 else
                     updateCost(current, t, current.cost + VER_HOR_COST, closed, open);
             }
@@ -167,7 +172,7 @@ public class Metoda {
             if (current.j + 1 < grid[0].length) {
                 t = grid[current.i][current.j + 1];
                 if(t.isBlock)
-                    updateCost(current, t, current.cost + (VER_HOR_COST*5), closed, open);
+                    updateCost(current, t, current.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
                 else
                     updateCost(current, t, current.cost + VER_HOR_COST, closed, open);
 
@@ -177,7 +182,7 @@ public class Metoda {
 
                 t = grid[current.i + 1][current.j];
                 if(t.isBlock)
-                    updateCost(current, t, current.cost + (VER_HOR_COST*5), closed, open);
+                    updateCost(current, t, current.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
                 else
                     updateCost(current, t, current.cost + VER_HOR_COST, closed, open);
 
@@ -186,17 +191,18 @@ public class Metoda {
                     if(t.isBlock)
                         updateCost(current, t, current.cost + DIAG_COST, closed, open);
                     else
-                        updateCost(current, t, current.cost + (DIAG_COST*5), closed, open);
+                        updateCost(current, t, current.cost + (DIAG_COST*BLOCK_COST), closed, open);
                 }
 
                 if (current.j + 1 < grid[0].length) {
                     t = grid[current.i + 1][current.j + 1];
                     if (t.isBlock)
-                        updateCost(current, t, current.cost + (DIAG_COST*5), closed, open);
+                        updateCost(current, t, current.cost + (DIAG_COST*BLOCK_COST), closed, open);
                     else
                         updateCost(current, t, current.cost + DIAG_COST, closed, open);
                 }
             }
+            moveCount = moveCount + 1;
         }
     }
 
@@ -225,14 +231,14 @@ public class Metoda {
 
                 t = grid1[current1.i - 1][current1.j];
                 if(t.isBlock)
-                    updateCost(current1, t, current1.cost + (VER_HOR_COST*5), closed, open);
+                    updateCost(current1, t, current1.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
                 else
                     updateCost(current1, t, current1.cost + VER_HOR_COST, closed, open);
 
                 if (current1.j - 1 >= 0) {
                     t = grid1[current1.i - 1][current1.j - 1];
                     if(t.isBlock)
-                        updateCost(current1, t, current1.cost + (VER_HOR_COST*5), closed, open);
+                        updateCost(current1, t, current1.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
                     else
                         updateCost(current1, t, current1.cost + VER_HOR_COST, closed, open);
                 }
@@ -240,7 +246,7 @@ public class Metoda {
                 if (current1.j + 1 < grid1[0].length) {
                     t = grid1[current1.i - 1][current1.j + 1];
                     if(t.isBlock)
-                        updateCost(current1, t, current1.cost + (VER_HOR_COST*5), closed, open);
+                        updateCost(current1, t, current1.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
                     else
                         updateCost(current1, t, current1.cost + VER_HOR_COST, closed, open);
                 }
@@ -249,7 +255,7 @@ public class Metoda {
             if (current1.j - 1 >= 0) {
                 t = grid1[current1.i][current1.j - 1];
                 if(t.isBlock)
-                    updateCost(current1, t, current1.cost + (VER_HOR_COST*5), closed, open);
+                    updateCost(current1, t, current1.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
                 else
                     updateCost(current1, t, current1.cost + VER_HOR_COST, closed, open);
             }
@@ -257,7 +263,7 @@ public class Metoda {
             if (current1.j + 1 < grid1[0].length) {
                 t = grid1[current1.i][current1.j + 1];
                 if(t.isBlock)
-                    updateCost(current1, t, current1.cost + (VER_HOR_COST*5), closed, open);
+                    updateCost(current1, t, current1.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
                 else
                     updateCost(current1, t, current1.cost + VER_HOR_COST, closed, open);
 
@@ -267,7 +273,7 @@ public class Metoda {
 
                 t = grid1[current1.i + 1][current1.j];
                 if(t.isBlock)
-                    updateCost(current1, t, current1.cost + (VER_HOR_COST*5), closed, open);
+                    updateCost(current1, t, current1.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
                 else
                     updateCost(current1, t, current1.cost + VER_HOR_COST, closed, open);
 
@@ -276,17 +282,18 @@ public class Metoda {
                     if(t.isBlock)
                         updateCost(current1, t, current1.cost + VER_HOR_COST, closed, open);
                     else
-                        updateCost(current1, t, current1.cost + (VER_HOR_COST*5), closed, open);
+                        updateCost(current1, t, current1.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
                 }
 
                 if (current1.j + 1 < grid1[0].length) {
                     t = grid1[current1.i + 1][current1.j + 1];
                     if (t.isBlock)
-                        updateCost(current1, t, current1.cost + (VER_HOR_COST*5), closed, open);
+                        updateCost(current1, t, current1.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
                     else
                         updateCost(current1, t, current1.cost + VER_HOR_COST, closed, open);
                 }
             }
+            moveCount1 = moveCount1 + 1;
         }
     }
 
@@ -309,33 +316,6 @@ public class Metoda {
             System.out.println();
         }
         System.out.println("0: Wolne pole BK: Przeszkoda KP: Pole końcowe SP: Pole startowe\n");
-    }
-
-    public void displayHeuristic(Cell grid[][]) {
-        for (int i = 0; i < grid.length; i++) {
-            for (int j = 0; j < grid[i].length; j++) {
-                System.out.printf("%.2f ", grid[i][j].heuristic);
-            }
-            System.out.println();
-        }
-        System.out.println();
-    }
-
-    public void displayScores() {
-
-        System.out.println("scores:");
-
-        for (int i = 0; i < grid.length; i++) {
-            for (int j = 0; j < grid[i].length; j++) {
-                if (grid[i][j] != null) {
-                    System.out.printf("%-3f ", grid[i][j].cost);
-                } else {
-                    System.out.print("BC  "); // blocked cell
-                }
-            }
-            System.out.println();
-        }
-        System.out.println();
     }
 
     public void displayPath(Cell grid[][]) {
@@ -371,11 +351,11 @@ public class Metoda {
             for (int i = 0; i < grid.length; i++) {
                 for (int j = 0; j < grid[i].length; j++) {
                     if ((i == startI) && (j == startJ)) {
-                        System.out.print("SC  "); // start cell
+                        System.out.print("SP  "); // start cell
                     } else if (grid[i][j].isBlock) {
-                        System.out.print("BC  "); // blocked cell
+                        System.out.print("BK  "); // blocked cell
                     } else if ((i == endI) && (j == endJ)) {
-                        System.out.print("EC  "); // end cell
+                        System.out.print("KP  "); // end cell
                     } else if (grid[i][j] != null) {
                         System.out.printf("%-3s ", grid[i][j].isSolution ? "X" : "0");
                     }
@@ -383,35 +363,7 @@ public class Metoda {
                 System.out.println();
             }
             System.out.println();
-        } else {
-            System.out.println("path from (" + startI + "," + startJ + ") to (" + endI + "," + endJ + ") NOT found :o(");
         }
-    }
-
-    public void displayClosedCells() {
-
-        System.out.println("closedCells:");
-
-        for (int i = 0; i < closed.length; i++) {
-            for (int j = 0; j < closed[0].length; j++) {
-                System.out.printf("%-3s ", closed[i][j] ? "T" : "F");
-            }
-            System.out.println();
-        }
-        System.out.println();
-    }
-
-    public void displayBlocks() {
-
-        System.out.println("blocks:");
-
-        for (int i = 0; i < grid.length; i++) {
-            for (int j = 0; j < grid[0].length; j++) {
-                System.out.printf("%-3s ", grid[i][j].isBlock ? "T" : "F");
-            }
-            System.out.println();
-        }
-        System.out.println();
     }
 
 }

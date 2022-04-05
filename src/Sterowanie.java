@@ -1,25 +1,65 @@
+import java.util.Scanner;
+
 public class Sterowanie {
     public static void main(String[] args) {
 
-        Metoda metoda = new Metoda(8, 8, 0, 0, 7, 7);
+        int width, height, sI, sJ, eI, eJ;
+        boolean isCorrect = false;
+        Scanner in = new Scanner(System.in);
 
-        metoda.displayGrid();
+        System.out.print("Wprowadz szerokość świata: ");
+        width = in.nextInt();
+        System.out.print("Wprowadz wysokość świata: ");
+        height = in.nextInt();
 
-        System.out.println("Diagonal distance: ");
-        metoda.search(metoda.current, metoda.closed, metoda.open);
-//        metoda.displayHeuristic(metoda.grid);
-        metoda.displayPath(metoda.grid);
-        System.out.println("Koszt calkowity: ");
-        System.out.printf("%.2f ", metoda.grid[metoda.endI][metoda.endJ].cost);
+        do {
+            System.out.print("Wprowadz współrzędną X pola startowego: ");
+            sJ = in.nextInt();
+            if(sJ > width - 1) {
+                System.out.println("Niepoprawna wpsółrzędna!!! Spróbuj ponownie");
+                isCorrect = false;
+            }
+            else
+                isCorrect = true;
+        } while (!isCorrect);
+
+        do {
+            isCorrect = false;
+            System.out.print("Wprowadz współrzędną Y pola startowego: ");
+            sI = in.nextInt();
+            if(sI > height - 1) {
+                System.out.println("Niepoprawna wpsółrzędna!!! Spróbuj ponownie");
+                isCorrect = false;
+            }
+            else
+                isCorrect = true;
+        } while (!isCorrect);
+
+        do {
+            isCorrect = false;
+            System.out.print("Wprowadz współrzędną X pola końcowego: ");
+            eJ = in.nextInt();
+            if(eJ > width - 1) {
+                System.out.println("Niepoprawna wpsółrzędna!!! Spróbuj ponownie");
+                isCorrect = false;
+            }
+            else
+                isCorrect = true;
+        } while (!isCorrect);
+
+        do {
+            isCorrect = false;
+            System.out.print("Wprowadz współrzędną Y pola końcowego: ");
+            eI = in.nextInt();
+            if(eI > height - 1 || (eI == sI && eJ == sJ)) {
+                System.out.println("Niepoprawna wpsółrzędna!!! Spróbuj ponownie");
+                isCorrect = false;
+            }
+            else
+                isCorrect = true;
+        } while (!isCorrect);
         System.out.println();
-        System.out.println();
 
-        System.out.println("Chebyshev cost: ");
-        metoda.search1(metoda.current1, metoda.closed1, metoda.open1);
-//        metoda.displayHeuristic(metoda.grid1);
-        metoda.displayPath(metoda.grid1);
-        System.out.println("Koszt calkowity: ");
-        System.out.printf("%.2f ", metoda.grid1[metoda.endI][metoda.endJ].cost);
+        Problem problem = new Problem(height, width, sI, sJ, eI, eJ);
     }
-
 }
