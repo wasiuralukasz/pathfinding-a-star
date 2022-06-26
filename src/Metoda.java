@@ -1,20 +1,27 @@
+/**
+* @author LukaszWasiura
+*/
+import javax.swing.*;
 import java.util.PriorityQueue;
 import java.util.Stack;
 
 public class Metoda {
 
     //koszt dla ruchu w jednym z ośmiu kierunków
-    public static final int VER_HOR_COST  = 1;
-    public static final double DIAG_COST = Math.sqrt(2);
+    public static int VER_HOR_COST  = 1;
+    public static double DIAG_COST = Math.sqrt(2);
 
     //koszt w momencie gdy znajduje się tam przeszkoda
     public static final int BLOCK_COST = 3;
 
     public Cell[][] grid, grid1;
 
+    //Obecne pole
     public Cell current, current1;
 
+    //Lista OPEN, open dla grid, open1 dla grid1
     public PriorityQueue<Cell>  open, open1;
+    //Lista CLOSED, closed dla grid, closed1 dla grid1
     public boolean[][] closed, closed1;
 
     //Start
@@ -23,9 +30,15 @@ public class Metoda {
     //Koniec
     public int endI, endJ;
 
+    //Ilość ruchów
     int moveCount = 0;
-    int moveCount1 = 1;
 
+    //Koszt całkowity
+    double koszt;
+
+    String sciezka, przeszukiwanie;
+
+    //Tworzy świat o konkretnych parametrach
     public Metoda(int width, int height, int sI, int sJ, int eI, int eJ) {
         grid = new Cell[width][height];
         grid1 = new Cell[width][height];
@@ -53,6 +66,7 @@ public class Metoda {
         addRandomBlock();
     }
 
+    //Odpowiada za liczenie heurystyki: Diagonal Cost i Chebyshev Cost
     public void addHeuristic() {
         for (int i = 0; i < grid.length; i++) {
             for (int j = 0; j < grid[i].length; j++) {
@@ -69,6 +83,7 @@ public class Metoda {
         }
     }
 
+    //Odpowiada za dodanie przeszkód w losowych miejscach
     public void addRandomBlock() {
         int min = 0;
         int maxI = grid.length-1;
@@ -86,22 +101,29 @@ public class Metoda {
         }
     }
 
+    //Przypisuje współrzędne pozycji startowej
     public void startCell(int i, int j) {
         startI = i;
         startJ = j;
     }
 
+    //Przypisuje współrzędne pozycji końcowej
     public void endCell(int i, int j) {
         endI = i;
         endJ = j;
     }
 
+    //Algorytm a star
     public void updateCost(Cell current, Cell t, double cost, boolean[][] closed, PriorityQueue<Cell>  open) {
 
+        double tFinalCost;
         if ((t == null) || closed[t.i][t.j]) {
             return;
         }
-        double tFinalCost = t.heuristic + cost;
+        if(t.i == startI && t.j == startJ)
+            tFinalCost = 0;
+        else
+            tFinalCost = t.heuristic + cost;
 
         boolean isOpen = open.contains(t);
 
@@ -115,11 +137,17 @@ public class Metoda {
             }
         }
     }
+    public void search(Cell current, boolean[][] closed, PriorityQueue<Cell>  open, boolean isEqual, Cell grid[][]) {
 
-    public void search(Cell current, boolean[][] closed, PriorityQueue<Cell>  open) {
+        if (isEqual) {
+            DIAG_COST = VER_HOR_COST;
+//            moveCount = 0;
+        }
 
         open.add(grid[startI][startJ]);
-
+        przeszukiwanie = "";
+        System.out.println();
+        System.out.print("Przeszukiwanie: ");
         while (true) {
 
             current = open.poll();
@@ -129,6 +157,16 @@ public class Metoda {
             }
 
             closed[current.i][current.j] = true;
+
+            if(current.equals(grid[endI][endJ])) {
+                System.out.print("[" + current.i + ", " + current.j + "]");
+                przeszukiwanie = przeszukiwanie + " " + "[" + current.i + ", " + current.j + "]";
+            }
+            else {
+                System.out.print("[" + current.i + ", " + current.j + "]" + " -> ");
+                przeszukiwanie = przeszukiwanie + " " + "[" + current.i + ", " + current.j + "]" + " -> ";
+            }
+
 
             if (current.equals(grid[endI][endJ])) {
                 return;
@@ -202,101 +240,11 @@ public class Metoda {
                         updateCost(current, t, current.cost + DIAG_COST, closed, open);
                 }
             }
-            moveCount = moveCount + 1;
+//            moveCount = moveCount + 1;
         }
     }
 
-    public void search1(Cell current1, boolean[][] closed, PriorityQueue<Cell>  open) {
-
-        open.add(grid1[startI][startJ]);
-
-
-        while (true) {
-
-            current1 = open.poll();
-
-            if (current1 == null) {
-                break;
-            }
-
-            closed[current1.i][current1.j] = true;
-
-            if (current1.equals(grid1[endI][endJ])) {
-                return;
-            }
-
-            Cell t;
-
-            if (current1.i - 1 >= 0) {
-
-                t = grid1[current1.i - 1][current1.j];
-                if(t.isBlock)
-                    updateCost(current1, t, current1.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
-                else
-                    updateCost(current1, t, current1.cost + VER_HOR_COST, closed, open);
-
-                if (current1.j - 1 >= 0) {
-                    t = grid1[current1.i - 1][current1.j - 1];
-                    if(t.isBlock)
-                        updateCost(current1, t, current1.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
-                    else
-                        updateCost(current1, t, current1.cost + VER_HOR_COST, closed, open);
-                }
-
-                if (current1.j + 1 < grid1[0].length) {
-                    t = grid1[current1.i - 1][current1.j + 1];
-                    if(t.isBlock)
-                        updateCost(current1, t, current1.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
-                    else
-                        updateCost(current1, t, current1.cost + VER_HOR_COST, closed, open);
-                }
-            }
-
-            if (current1.j - 1 >= 0) {
-                t = grid1[current1.i][current1.j - 1];
-                if(t.isBlock)
-                    updateCost(current1, t, current1.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
-                else
-                    updateCost(current1, t, current1.cost + VER_HOR_COST, closed, open);
-            }
-
-            if (current1.j + 1 < grid1[0].length) {
-                t = grid1[current1.i][current1.j + 1];
-                if(t.isBlock)
-                    updateCost(current1, t, current1.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
-                else
-                    updateCost(current1, t, current1.cost + VER_HOR_COST, closed, open);
-
-            }
-
-            if (current1.i + 1 < grid1.length) {
-
-                t = grid1[current1.i + 1][current1.j];
-                if(t.isBlock)
-                    updateCost(current1, t, current1.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
-                else
-                    updateCost(current1, t, current1.cost + VER_HOR_COST, closed, open);
-
-                if (current1.j - 1 >= 0) {
-                    t = grid1[current1.i + 1][current1.j - 1];
-                    if(t.isBlock)
-                        updateCost(current1, t, current1.cost + VER_HOR_COST, closed, open);
-                    else
-                        updateCost(current1, t, current1.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
-                }
-
-                if (current1.j + 1 < grid1[0].length) {
-                    t = grid1[current1.i + 1][current1.j + 1];
-                    if (t.isBlock)
-                        updateCost(current1, t, current1.cost + (VER_HOR_COST*BLOCK_COST), closed, open);
-                    else
-                        updateCost(current1, t, current1.cost + VER_HOR_COST, closed, open);
-                }
-            }
-            moveCount1 = moveCount1 + 1;
-        }
-    }
-
+    //Wyświetla świat
     public void displayGrid() {
 
         System.out.println("Swiat: ");
@@ -318,8 +266,10 @@ public class Metoda {
         System.out.println("0: Wolne pole BK: Przeszkoda KP: Pole końcowe SP: Pole startowe\n");
     }
 
+    //Wyświetla rozwiązanie
     public void displayPath(Cell grid[][]) {
 
+        moveCount = 0;
         if (closed[endI][endJ]) {
 
             Stack<Cell> stack = new Stack<Cell>();
@@ -336,15 +286,23 @@ public class Metoda {
                 current = current.parent;
             }
 
+            sciezka = "";
+            System.out.println();
             System.out.print("Scieżka: ");
             while (!stack.isEmpty()) {
                 Cell c = stack.pop();
                 if (stack.size() > 0) {
                     System.out.print(c + " -> ");
+                    sciezka = sciezka + " " + c + " -> ";
                 } else {
                     System.out.print(c);
+                    sciezka = sciezka + " " + c;
                 }
+                moveCount = moveCount + 1;
             }
+
+            System.out.println();
+            System.out.println("Ruchy1: " + (moveCount-1));
 
             System.out.println("\n\nRozwiązanie:");
 
@@ -366,4 +324,23 @@ public class Metoda {
         }
     }
 
+    public void displayHeuristic(Cell grid[][]) {
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid[i].length; j++) {
+                System.out.printf("%.2f ", grid[i][j].heuristic);
+            }
+            System.out.println();
+        }
+        System.out.println();
+    }
+
+    public void displayScore(Cell grid[][]) {
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid[i].length; j++) {
+                System.out.printf("%.2f ", grid[i][j].cost);
+            }
+            System.out.println();
+        }
+        System.out.println();
+    }
 }

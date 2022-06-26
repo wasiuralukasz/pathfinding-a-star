@@ -1,7 +1,11 @@
+/**
+ * @author LukaszWasiura
+ */
+import java.io.*;
 import java.util.Scanner;
 
 public class Sterowanie {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException {
 
         int width, height, sI, sJ, eI, eJ;
         boolean isCorrect = false;

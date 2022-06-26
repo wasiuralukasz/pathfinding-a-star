@@ -1,3 +1,7 @@
+/**
+ * @author LukaszWasiura
+ */
+
 public class Cell {
 
     //Współrzędne
